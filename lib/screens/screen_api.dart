@@ -4,13 +4,21 @@ import '../bloc/api_bloc.dart';
 import '../bloc/api_event.dart';
 import '../bloc/api_state.dart';
 import '../models/api_model.dart';
+import 'dart:convert';
 
 class ScreenApi extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('API CRUD')),
-      body: BlocBuilder<ApiBloc, ApiState>(
+      body: BlocConsumer<ApiBloc, ApiState>(
+        listener: (context, state) {
+          if (state is ApiError) {
+            _showResultDialog(context, 'Error', state.message);
+          } else if (state is ApiLoaded) {
+            _showResultDialog(context, 'Success', 'Operation completed successfully');
+          }
+        },
         builder: (context, state) {
           if (state is ApiInitial) {
             BlocProvider.of<ApiBloc>(context).add(FetchData());
@@ -21,10 +29,10 @@ class ScreenApi extends StatelessWidget {
             return ListView.builder(
               itemCount: state.data.length,
               itemBuilder: (context, index) {
-                final item = ApiModel.fromJson(state.data[index]);
+                final item = state.data[index];
                 return ListTile(
-                  title: Text(item.firstName),
-                  subtitle: Text(item.lastName),
+                  title: Text('${item.firstName} ${item.lastName}'),
+                  subtitle: Text('Email: ${item.email ?? "N/A"}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -38,11 +46,10 @@ class ScreenApi extends StatelessWidget {
                       ),
                     ],
                   ),
+                  onTap: () => _showItemDetails(context, item),
                 );
               },
             );
-          } else if (state is ApiError) {
-            return Center(child: Text('Error: ${state.message}'));
           }
           return Container();
         },
@@ -54,37 +61,76 @@ class ScreenApi extends StatelessWidget {
     );
   }
 
+  void _showResultDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showItemDetails(BuildContext context, ApiModel item) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Item Details'),
+        content: SingleChildScrollView(
+          child: Text(
+            JsonEncoder.withIndent('  ').convert(item.toJson()),
+            style: TextStyle(fontFamily: 'Courier'),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddDialog(BuildContext context) {
     final firstNameController = TextEditingController();
     final lastNameController = TextEditingController();
-    final edadController = TextEditingController();
-    final deporteController = TextEditingController();
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Add New Item'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: firstNameController,
-              decoration: InputDecoration(labelText: 'First Name'),
-            ),
-            TextField(
-              controller: lastNameController,
-              decoration: InputDecoration(labelText: 'Last Name'),
-            ),
-            TextField(
-              controller: edadController,
-              decoration: InputDecoration(labelText: 'Edad'),
-              keyboardType: TextInputType.number,
-            ),
-            TextField(
-              controller: deporteController,
-              decoration: InputDecoration(labelText: 'Deporte'),
-            ),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: firstNameController,
+                decoration: InputDecoration(labelText: 'First Name'),
+              ),
+              TextField(
+                controller: lastNameController,
+                decoration: InputDecoration(labelText: 'Last Name'),
+              ),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(labelText: 'Email'),
+              ),
+              TextField(
+                controller: passwordController,
+                decoration: InputDecoration(labelText: 'Password'),
+                obscureText: true,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -98,8 +144,8 @@ class ScreenApi extends StatelessWidget {
                 firstName: firstNameController.text,
                 lastName: lastNameController.text,
                 childs: [],
-                edad: edadController.text,
-                deporte: deporteController.text,
+                email: emailController.text,
+                password: passwordController.text,
               )));
               Navigator.pop(context);
             },
@@ -113,34 +159,36 @@ class ScreenApi extends StatelessWidget {
   void _showEditDialog(BuildContext context, ApiModel item) {
     final firstNameController = TextEditingController(text: item.firstName);
     final lastNameController = TextEditingController(text: item.lastName);
-    final edadController = TextEditingController(text: item.edad);
-    final deporteController = TextEditingController(text: item.deporte);
+    final emailController = TextEditingController(text: item.email);
+    final passwordController = TextEditingController(text: item.password);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Edit Item'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: firstNameController,
-              decoration: InputDecoration(labelText: 'First Name'),
-            ),
-            TextField(
-              controller: lastNameController,
-              decoration: InputDecoration(labelText: 'Last Name'),
-            ),
-            TextField(
-              controller: edadController,
-              decoration: InputDecoration(labelText: 'Edad'),
-              keyboardType: TextInputType.number,
-            ),
-            TextField(
-              controller: deporteController,
-              decoration: InputDecoration(labelText: 'Deporte'),
-            ),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: firstNameController,
+                decoration: InputDecoration(labelText: 'First Name'),
+              ),
+              TextField(
+                controller: lastNameController,
+                decoration: InputDecoration(labelText: 'Last Name'),
+              ),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(labelText: 'Email'),
+              ),
+              TextField(
+                controller: passwordController,
+                decoration: InputDecoration(labelText: 'Password'),
+                obscureText: true,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -149,13 +197,11 @@ class ScreenApi extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              BlocProvider.of<ApiBloc>(context).add(UpdateData(ApiModel(
-                id: item.id,
+              BlocProvider.of<ApiBloc>(context).add(UpdateData(item.copyWith(
                 firstName: firstNameController.text,
                 lastName: lastNameController.text,
-                childs: item.childs,
-                edad: edadController.text,
-                deporte: deporteController.text,
+                email: emailController.text,
+                password: passwordController.text,
               )));
               Navigator.pop(context);
             },
@@ -189,3 +235,4 @@ class ScreenApi extends StatelessWidget {
     );
   }
 }
+

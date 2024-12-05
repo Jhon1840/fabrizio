@@ -9,7 +9,7 @@ class ApiBloc extends Bloc<ApiEvent, ApiState> {
   ApiBloc() : super(ApiInitial()) {
     on<FetchData>(_onFetchData);
     on<AddData>(_onAddData);
-    on<UpdateData>(_onUpdateData);  
+    on<UpdateData>(_onUpdateData);
     on<DeleteData>(_onDeleteData);
   }
 
@@ -21,12 +21,12 @@ class ApiBloc extends Bloc<ApiEvent, ApiState> {
       final response = await http.get(Uri.parse(_baseUrl));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        emit(ApiLoaded(data));
+        emit(ApiLoaded(data.map((item) => ApiModel.fromJson(item)).toList()));
       } else {
-        emit(ApiError('Failed to fetch data'));
+        emit(ApiError('Failed to fetch data: ${response.statusCode}'));
       }
     } catch (e) {
-      emit(ApiError(e.toString()));
+      emit(ApiError('Error fetching data: ${e.toString()}'));
     }
   }
 
@@ -41,10 +41,10 @@ class ApiBloc extends Bloc<ApiEvent, ApiState> {
       if (response.statusCode == 201) {
         add(FetchData());
       } else {
-        emit(ApiError('Failed to add data'));
+        emit(ApiError('Failed to add data: ${response.statusCode}'));
       }
     } catch (e) {
-      emit(ApiError(e.toString()));
+      emit(ApiError('Error adding data: ${e.toString()}'));
     }
   }
 
@@ -59,10 +59,10 @@ class ApiBloc extends Bloc<ApiEvent, ApiState> {
       if (response.statusCode == 200) {
         add(FetchData());
       } else {
-        emit(ApiError('Failed to update data'));
+        emit(ApiError('Failed to update data: ${response.statusCode}'));
       }
     } catch (e) {
-      emit(ApiError(e.toString()));
+      emit(ApiError('Error updating data: ${e.toString()}'));
     }
   }
 
@@ -73,10 +73,10 @@ class ApiBloc extends Bloc<ApiEvent, ApiState> {
       if (response.statusCode == 200) {
         add(FetchData());
       } else {
-        emit(ApiError('Failed to delete data'));
+        emit(ApiError('Failed to delete data: ${response.statusCode}'));
       }
     } catch (e) {
-      emit(ApiError(e.toString()));
+      emit(ApiError('Error deleting data: ${e.toString()}'));
     }
   }
 }
