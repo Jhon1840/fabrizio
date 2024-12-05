@@ -4,7 +4,6 @@ import '../bloc/api_bloc.dart';
 import '../bloc/api_event.dart';
 import '../bloc/api_state.dart';
 import '../models/api_model.dart';
-import 'dart:convert';
 
 class ScreenApi extends StatelessWidget {
   @override
@@ -14,9 +13,9 @@ class ScreenApi extends StatelessWidget {
       body: BlocConsumer<ApiBloc, ApiState>(
         listener: (context, state) {
           if (state is ApiError) {
-            _showResultDialog(context, 'Error', state.message);
-          } else if (state is ApiLoaded) {
-            _showResultDialog(context, 'Success', 'Operation completed successfully');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
           }
         },
         builder: (context, state) {
@@ -46,7 +45,6 @@ class ScreenApi extends StatelessWidget {
                       ),
                     ],
                   ),
-                  onTap: () => _showItemDetails(context, item),
                 );
               },
             );
@@ -57,43 +55,6 @@ class ScreenApi extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDialog(context),
         child: Icon(Icons.add),
-      ),
-    );
-  }
-
-  void _showResultDialog(BuildContext context, String title, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showItemDetails(BuildContext context, ApiModel item) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Item Details'),
-        content: SingleChildScrollView(
-          child: Text(
-            JsonEncoder.withIndent('  ').convert(item.toJson()),
-            style: TextStyle(fontFamily: 'Courier'),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Close'),
-          ),
-        ],
       ),
     );
   }
@@ -235,4 +196,3 @@ class ScreenApi extends StatelessWidget {
     );
   }
 }
-
